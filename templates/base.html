@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BroCode | Sentinel{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="brand">BroCode <span style="font-weight:300; color:var(--text-secondary)">Sentinel</span></div>
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}">Home</a>
+      {% if session.get('logged_in') %}
+      <a href="{{ url_for('dashboard') }}" style="color:var(--primary); font-weight:600;">Dashboard</a>
+      <a href="{{ url_for('logout') }}" style="color:var(--secondary);">Logout</a>
+      <span style="color:var(--text-secondary); margin-left:1rem; font-size:0.9rem;">Logged as: <strong
+          style="color:var(--text-primary)">{{ session.get('user_id') }}</strong></span>
+      {% else %}
+      <a href="{{ url_for('register') }}">Register</a>
+      <a href="{{ url_for('authenticate') }}" style="color:var(--primary); font-weight:600;">Login</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="container" style="width:100%; max-width:1200px; padding:2rem; flex:1;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages" style="margin-bottom: 2rem;">
+      {% for category, msg in messages %}
+      <div class="status-pill status-{{ 'high' if category == 'error' else 'normal' }}"
+        style="display:block; text-align:center; padding:1rem;">
+        {{ msg }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer>
+    <p>&copy; 2026 BroCode Inc. | Adaptive Behavioral Authentication</p>
+  </footer>
+</body>
+
+</html>

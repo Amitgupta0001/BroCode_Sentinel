@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Home | BroCode Sentinel{% endblock %}
+
+{% block content %}
+<div class="hero-section" style="text-align: center; padding: 6rem 0; position: relative; overflow: hidden;">
+  <!-- Radial Glow Effect -->
+  <div
+    style="position: absolute; top: 0%; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(0, 242, 254, 0.15) 0%, transparent 70%); z-index: -1;">
+  </div>
+
+  <h1
+    style="font-size: 4.5rem; letter-spacing: -0.05em; margin-bottom: 1.5rem; line-height: 1.1; font-weight: 800; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+    Invisible Security. <br>Continuous Trust.
+  </h1>
+  <p
+    style="font-size: 1.5rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto 4rem auto; line-height: 1.6;">
+    The world's first adaptive behavioral authentication engine that verifies your identity every second, without
+    disturbing your workflow.
+  </p>
+
+  {% if not session.get('logged_in') %}
+  <div class="cta-group" style="display: flex; gap: 2rem; justify-content: center; margin-bottom: 6rem;">
+    <a href="{{ url_for('authenticate') }}" style="text-decoration: none;">
+      <button style="padding: 1.25rem 3rem; font-size: 1.1rem; border-radius: 12px; font-weight: 700;">Authenticate
+        Now</button>
+    </a>
+    <a href="{{ url_for('register') }}" style="text-decoration: none;">
+      <button class="secondary-btn"
+        style="padding: 1.25rem 3rem; font-size: 1.1rem; border-radius: 12px; font-weight: 700; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">Get
+        Started</button>
+    </a>
+  </div>
+  {% else %}
+  <div class="cta-group" style="display: flex; gap: 2rem; justify-content: center; margin-bottom: 6rem;">
+    <a href="{{ url_for('dashboard') }}" style="text-decoration: none;">
+      <button style="padding: 1.25rem 3rem; font-size: 1.1rem; border-radius: 12px; font-weight: 700;">Enter Command
+        Center</button>
+    </a>
+  </div>
+  {% endif %}
+
+  <div class="features-grid"
+    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; margin-top: 4rem;">
+    <div class="card glass-panel" style="padding: 3rem 2rem; border-radius: 24px;">
+      <div style="font-size: 2.5rem; margin-bottom: 1.5rem;">⌨️</div>
+      <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--primary);">Keystroke DNA</h3>
+      <p style="color: var(--text-secondary); line-height: 1.6;">Analyzes 17+ unique timing features in your typing
+        rhythm to create an unbreakable biometric signature.</p>
+    </div>
+    <div class="card glass-panel" style="padding: 3rem 2rem; border-radius: 24px;">
+      <div style="font-size: 2.5rem; margin-bottom: 1.5rem;">👁️</div>
+      <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--secondary);">Neural Vision</h3>
+      <p style="color: var(--text-secondary); line-height: 1.6;">Continuous attention and liveness monitoring ensures
+        that only you are at the controls, at all times.</p>
+    </div>
+    <div class="card glass-panel" style="padding: 3rem 2rem; border-radius: 24px;">
+      <div style="font-size: 2.5rem; margin-bottom: 1.5rem;">🛡️</div>
+      <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: #10b981;">Quantum Protected</h3>
+      <p style="color: var(--text-secondary); line-height: 1.6;">Hardened with Post-Quantum Cryptography
+        (Kyber/Dilithium) to survive the next generation of cyber threats.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cta-group button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 242, 254, 0.2);
+    filter: brightness(1.1);
+  }
+
+  .secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+</style>
+{% endblock %}

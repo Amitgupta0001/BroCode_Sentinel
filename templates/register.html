@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Identity Enrollment | BroCode Sentinel{% endblock %}
+
+{% block content %}
+<div class="registration-container"
+  style="display: grid; grid-template-columns: 1fr 400px; gap: 3rem; max-width: 1100px; margin: 4rem auto; align-items: start;">
+
+  <!-- Left Column: Enrollment Form -->
+  <div class="glass-panel" style="padding: 3rem; border-radius: 24px; position: relative; overflow: hidden;">
+    <div
+      style="position: absolute; top: -50px; left: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);">
+    </div>
+
+    <h2
+      style="font-size: 2.25rem; margin-bottom: 0.5rem; font-weight: 700; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+      Initialize Enrollment</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 2.5rem; line-height: 1.6;">Construct your unique biometric
+      profile using the BKSD rhythm signature engine.</p>
+
+    <form id="registerForm" action="{{ url_for('register') }}" method="post" novalidate>
+      <div style="margin-bottom: 1.5rem;">
+        <label class="input-label">Identity ID</label>
+        <div style="position: relative;">
+          <span
+            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 0.8rem;">👤</span>
+          <input id="username" name="username" type="text" placeholder="Enter unique username" required minlength="3"
+            autocomplete="off" style="padding-left: 2.5rem;" />
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label class="input-label">Language Context</label>
+        <div style="position: relative;">
+          <span
+            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--secondary); font-size: 0.8rem;">🌐</span>
+          <select id="language" name="language" required
+            style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(15,23,42,0.6); color: white; font-family: inherit; appearance: none; cursor: pointer;">
+            <option value="english">English (Global)</option>
+            <option value="spanish">Spanish (Castilian)</option>
+            <option value="french">French (Francais)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 2.5rem;">
+        <label class="input-label">Keystroke Master Pattern</label>
+        <div style="position: relative;">
+          <span
+            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--success); font-size: 0.8rem;">⌨️</span>
+          <input id="typing_field" name="passphrase" type="text" placeholder="Type your secure phrase..."
+            autocomplete="off" required minlength="5"
+            style="padding-left: 2.5rem; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; border-bottom: 2px solid var(--glass-border);" />
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+          <span id="char-counter" style="font-size: 0.75rem; color: var(--text-secondary);">0 events captured</span>
+          <span id="rhythm-status" style="font-size: 0.75rem; color: var(--warning);">Awaiting input...</span>
+        </div>
+      </div>
+
+      <input id="keystrokes" name="keystrokes" type="hidden" />
+      <input id="device_fingerprint" name="device_fingerprint" type="hidden" />
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <button type="submit"
+        style="padding: 1rem; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;">Finalize
+        Bio-Profile</button>
+      <a href="{{ url_for('index') }}"
+        style="display: block; text-align: center; margin-top: 1.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s;">Cancel
+        Enrollment</a>
+    </form>
+  </div>
+
+  <!-- Right Column: Live Telemetry -->
+  <div class="glass-panel" style="padding: 2.5rem; border-radius: 24px;">
+    <h3 class="card-title" style="text-align: left; margin-bottom: 2rem; color: #fff;">Identity Telemetry</h3>
+
+    <div class="telemetry-item" style="margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Rhythm Entropy</span>
+        <span id="entropy-pct" style="font-size: 0.8rem; color: var(--primary);">0%</span>
+      </div>
+      <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;">
+        <div id="entropy-bar"
+          style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+        </div>
+      </div>
+    </div>
+
+    <div class="telemetry-item" style="margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Fingerprint Status</span>
+        <span id="fp-status-text" style="font-size: 0.8rem; color: var(--text-secondary);">Scanning...</span>
+      </div>
+      <div id="fp-pill" class="status-pill"
+        style="width: 100%; justify-content: center; background: rgba(255,255,255,0.02); color: var(--text-secondary); border: 1px dashed var(--glass-border);">
+        Pending Collection
+      </div>
+    </div>
+
+    <div
+      style="margin-top: 4rem; padding: 1.5rem; background: rgba(59, 130, 246, 0.05); border-radius: 12px; border-left: 3px solid var(--primary);">
+      <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-primary);">System Notice</h4>
+      <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+        BroCode Sentinel uses high-precision timing to record the millisecond gaps between your key presses. This
+        creates a signature that is virtually impossible to replicate or spoof.
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .input-label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+    display: block;
+    font-weight: 600;
+  }
+
+  input {
+    background: rgba(15, 23, 42, 0.4) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 10px !important;
+    padding: 0.875rem 1rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  input:focus {
+    border-color: var(--primary) !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+  }
+
+  .registration-container {
+    animation: slideIn 0.5s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<script src="{{ url_for('static', filename='fingerprint.js') }}"></script>
+<script>
+  (function () {
+    const typingField = document.getElementById('typing_field');
+    const keystrokesInput = document.getElementById('keystrokes');
+    const fingerprintInput = document.getElementById('device_fingerprint');
+    const charCounter = document.getElementById('char-counter');
+    const rhythmStatus = document.getElementById('rhythm-status');
+    const entropyBar = document.getElementById('entropy-bar');
+    const entropyPct = document.getElementById('entropy-pct');
+    const fpStatusText = document.getElementById('fp-status-text');
+    const fpPill = document.getElementById('fp-pill');
+    const form = document.getElementById('registerForm');
+
+    let startTime = null;
+    let events = [];
+    let fingerprintCollected = false;
+
+    // Collect device fingerprint
+    async function collectFingerprint() {
+      try {
+        const fp = new DeviceFingerprint();
+        const result = await fp.generate();
+        fingerprintInput.value = JSON.stringify({
+          hash: result.fingerprint,
+          components: result.components
+        });
+        fingerprintCollected = true;
+
+        // Update UI
+        fpStatusText.innerText = "Collected";
+        fpStatusText.style.color = "var(--success)";
+        fpPill.innerText = "Identity Hashed";
+        fpPill.className = "status-pill status-normal";
+        fpPill.style.border = "none";
+      } catch (err) {
+        console.error('Fingerprint collection failed:', err);
+        fpStatusText.innerText = "Fallback Active";
+        fpPill.innerText = "Basic HWID";
+      }
+    }
+
+    collectFingerprint();
+
+    // Capture precise keystroke timings
+    typingField.addEventListener('keydown', (e) => {
+      if (!startTime) startTime = Date.now();
+      events.push({ key: e.key, t: Date.now() - startTime, type: 'keydown' });
+      updateRhythmUI();
+    });
+
+    typingField.addEventListener('keyup', (e) => {
+      if (startTime) {
+        events.push({ key: e.key, t: Date.now() - startTime, type: 'keyup' });
+        keystrokesInput.value = JSON.stringify(events);
+        updateRhythmUI();
+      }
+    });
+
+    function updateRhythmUI() {
+      const count = events.length;
+      charCounter.innerText = `${count} events captured`;
+
+      // Progress estimation
+      let progress = Math.min((count / 20) * 100, 100);
+      entropyBar.style.width = `${progress}%`;
+      entropyPct.innerText = `${Math.round(progress)}%`;
+
+      if (count > 0) {
+        rhythmStatus.innerText = "Capturing dynamics...";
+        rhythmStatus.style.color = "var(--primary)";
+      }
+      if (count > 15) {
+        rhythmStatus.innerText = "Signature Stable";
+        rhythmStatus.style.color = "var(--success)";
+      }
+    }
+
+    form.addEventListener('submit', (ev) => {
+      if (!events || events.length < 5) {
+        ev.preventDefault();
+        alert('The engine needs more rhythm data. Please type a bit more.');
+        typingField.focus();
+        return;
+      }
+
+      if (!fingerprintCollected) {
+        ev.preventDefault();
+        alert('Wait for security hash completion...');
+        return;
+      }
+    });
+  })();
+</script>
+{% endblock %}

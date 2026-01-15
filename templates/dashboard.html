@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | BroCode Sentinel{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Trust Score Card -->
+    <div class="card glass-panel"
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;">
+        <div class="card-title">Live Trust Score</div>
+        <div class="card-value" id="trust" style="font-size: 3.5rem; margin-top: 1rem;">--</div>
+        <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 0.9rem;">Adaptive Fusion Pulse</p>
+    </div>
+
+    <!-- Risk Level Card -->
+    <div class="card glass-panel"
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;">
+        <div class="card-title">Risk Assessment</div>
+        <div id="risk" class="status-pill status-normal"
+            style="font-size: 1.4rem; margin-top: 1rem; padding: 0.75rem 2rem;">Normal</div>
+        <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 0.9rem;">Identity Confidence</p>
+    </div>
+
+    <!-- Anomaly Card -->
+    <div class="card glass-panel"
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;">
+        <div class="card-title">Behavioral Drift</div>
+        <div class="card-value" style="font-size: 1.8rem; margin-top: 1rem;" id="anomaly-status">Stable</div>
+        <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 0.9rem;">Gaze • Pose • Multi-modal</p>
+    </div>
+
+    <!-- Main Chart -->
+    <div class="glass-panel metric-chart-container" style="padding: 2.5rem; border-radius: 24px;">
+        <h3 class="card-title" style="text-align: left; margin-bottom: 2rem;">Trust Velocity Timeline</h3>
+        <canvas id="trustChart"></canvas>
+    </div>
+</div>
+
+<!-- Hidden input for monitor.js -->
+<input type="hidden" id="user" value="{{ session.get('user_id', 'guest') }}">
+
+<script src="{{ url_for('static', filename='monitor.js') }}"></script>
+<script>
+    // Chart Config
+    const ctx = document.getElementById('trustChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+    const trustChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Trust Score',
+                data: [],
+                borderColor: '#3b82f6',
+                backgroundColor: gradient,
+                borderWidth: 3,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#3b82f6',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    min: 0, max: 1,
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8', maxTicksLimit: 8 }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#f8fafc',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+
+    // Periodic UI updates (Chart & status text styling)
+    setInterval(() => {
+        const trustVal = parseFloat(document.getElementById("trust").innerText || "0");
+        const riskVal = document.getElementById("risk").innerText.toLowerCase();
+        const time = new Date().toLocaleTimeString();
+
+        // Update Chart
+        trustChart.data.labels.push(time);
+        trustChart.data.datasets[0].data.push(trustVal);
+        if (trustChart.data.labels.length > 20) {
+            trustChart.data.labels.shift();
+            trustChart.data.datasets[0].data.shift();
+        }
+        trustChart.update('none'); // 'none' for performance
+
+        // Update Risk Style
+        const riskEl = document.getElementById("risk");
+        const anomalyEl = document.getElementById("anomaly-status");
+        // No navStatus globally since we rely on shared base.html, 
+        // but we can add a system status pill to base.html or just dashboard.
+
+        if (riskVal.includes("high") || riskVal.includes("critical")) {
+            riskEl.className = "status-pill status-high";
+            anomalyEl.innerText = "Drift Detected";
+            anomalyEl.style.color = "var(--danger)";
+        } else {
+            riskEl.className = "status-pill status-normal";
+            anomalyEl.innerText = "Stable";
+            anomalyEl.style.color = "var(--success)";
+        }
+
+        riskEl.innerText = riskVal.toUpperCase();
+
+    }, 5000); // Sync with monitor.js interval (5 seconds)
+</script>
+{% endblock %}
+
+</html>

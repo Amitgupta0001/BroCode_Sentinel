@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Identity | BroCode Sentinel{% endblock %}
+
+{% block content %}
+<div class="auth-container"
+  style="display: grid; grid-template-columns: 1fr 400px; gap: 3rem; max-width: 1100px; margin: 4rem auto; align-items: start;">
+
+  <!-- Left Column: Verification Form -->
+  <div class="glass-panel" style="padding: 3rem; border-radius: 24px; position: relative; overflow: hidden;">
+    <div
+      style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);">
+    </div>
+
+    <h2
+      style="font-size: 2.25rem; margin-bottom: 0.5rem; font-weight: 700; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+      Identity Verification</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 2.5rem; line-height: 1.6;">Access the Sentinel command center
+      by verifying your multi-modal behavioral signature.</p>
+
+    <form id="authForm" action="{{ url_for('authenticate') }}" method="post" novalidate>
+      <div style="margin-bottom: 1.5rem;">
+        <label class="input-label">Identity ID</label>
+        <div style="position: relative;">
+          <span
+            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 0.8rem;">👤</span>
+          <input id="username" name="username" type="text" placeholder="Enter enrolled username" required minlength="3"
+            autocomplete="off" style="padding-left: 2.5rem;" />
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label class="input-label">Context Profile</label>
+        <div style="position: relative;">
+          <span
+            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--secondary); font-size: 0.8rem;">🌐</span>
+          <select id="language" name="language" required
+            style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(15,23,42,0.6); color: white; font-family: inherit; appearance: none; cursor: pointer;">
+            <option value="english">English (Global)</option>
+            <option value="spanish">Spanish (Castilian)</option>
+            <option value="french">French (Francais)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 2.5rem;">
+        <label class="input-label">Biometric Challenge</label>
+        <div style="position: relative;">
+          <span
+            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--success); font-size: 0.8rem;">🔒</span>
+          <input id="typing_field" name="passphrase" type="text" placeholder="Type your secure phrase..."
+            autocomplete="off" required minlength="5"
+            style="padding-left: 2.5rem; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; border-bottom: 2px solid var(--glass-border);" />
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+          <span id="char-counter" style="font-size: 0.75rem; color: var(--text-secondary);">0 events captured</span>
+          <span id="rhythm-status" style="font-size: 0.75rem; color: var(--warning);">Awaiting biometric pulse...</span>
+        </div>
+      </div>
+
+      <input id="keystrokes" name="keystrokes" type="hidden" />
+      <input id="device_fingerprint" name="device_fingerprint" type="hidden" />
+      <input id="geolocation_data" name="geolocation_data" type="hidden" />
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <button type="submit"
+        style="padding: 1rem; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;">Verify Access</button>
+      <a href="{{ url_for('index') }}"
+        style="display: block; text-align: center; margin-top: 1.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s;">Return
+        to Hub</a>
+    </form>
+  </div>
+
+  <!-- Right Column: Security Telemetry -->
+  <div class="glass-panel" style="padding: 2.5rem; border-radius: 24px;">
+    <h3 class="card-title" style="text-align: left; margin-bottom: 2rem; color: #fff;">Environment Check</h3>
+
+    <div class="telemetry-item" style="margin-bottom: 2.5rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Device Trust</span>
+        <span id="fp-status-text" style="font-size: 0.8rem; color: var(--warning);">Scanning HWID...</span>
+      </div>
+      <div id="fp-dot-container" style="display: flex; gap: 5px;">
+        <div class="scan-dot active"></div>
+        <div class="scan-dot"></div>
+        <div class="scan-dot"></div>
+        <div class="scan-dot"></div>
+      </div>
+    </div>
+
+    <div class="telemetry-item" style="margin-bottom: 2.5rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Geo-Location Access</span>
+        <span id="geo-status-text" style="font-size: 0.8rem; color: var(--warning);">Locating...</span>
+      </div>
+      <div id="geo-pill" class="status-pill"
+        style="width: 100%; justify-content: center; background: rgba(255,255,255,0.02); color: var(--text-secondary); border: 1px dashed var(--glass-border);">
+        Awaiting GPS/IP Pulse
+      </div>
+    </div>
+
+    <div
+      style="margin-top: 4rem; padding: 1.5rem; background: rgba(139, 92, 246, 0.05); border-radius: 12px; border-left: 3px solid var(--secondary);">
+      <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-primary);">Security Protocol</h4>
+      <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+        The Sentinel engine is currently aggregating your device fingerprint, geolocation, and keystroke dynamics to
+        ensure multi-factor behavioral integrity.
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .input-label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+    display: block;
+    font-weight: 600;
+  }
+
+  input {
+    background: rgba(15, 23, 42, 0.4) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 10px !important;
+    padding: 0.875rem 1rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  input:focus {
+    border-color: var(--primary) !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+  }
+
+  .auth-container {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .scan-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: background 0.3s;
+  }
+
+  .scan-dot.active {
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+  }
+
+  .scan-dot.success {
+    background: var(--success);
+  }
+</style>
+
+<script src="{{ url_for('static', filename='fingerprint.js') }}"></script>
+<script src="{{ url_for('static', filename='geolocation.js') }}"></script>
+<script>
+  (function () {
+    const typingField = document.getElementById('typing_field');
+    const keystrokesInput = document.getElementById('keystrokes');
+    const fingerprintInput = document.getElementById('device_fingerprint');
+    const geolocationInput = document.getElementById('geolocation_data');
+    const charCounter = document.getElementById('char-counter');
+    const rhythmStatus = document.getElementById('rhythm-status');
+    const fpStatusText = document.getElementById('fp-status-text');
+    const geoStatusText = document.getElementById('geo-status-text');
+    const geoPill = document.getElementById('geo-pill');
+    const dots = document.querySelectorAll('.scan-dot');
+    const form = document.getElementById('authForm');
+
+    let startTime = null;
+    let events = [];
+    let fingerprintCollected = false;
+    let geolocationCollected = false;
+
+    // Collect device fingerprint
+    async function collectFingerprint() {
+      try {
+        const fp = new DeviceFingerprint();
+        const result = await fp.generate();
+        fingerprintInput.value = JSON.stringify({
+          hash: result.fingerprint,
+          components: result.components
+        });
+        fingerprintCollected = true;
+        fpStatusText.innerText = "Verified";
+        fpStatusText.style.color = "var(--success)";
+        dots.forEach(dot => dot.classList.add('success'));
+      } catch (err) {
+        console.error('Fingerprint collection failed:', err);
+        fpStatusText.innerText = "Fallback";
+      }
+    }
+
+    // Collect geolocation
+    async function collectGeolocation() {
+      try {
+        const geo = new GeoLocation();
+        const result = await geo.collect();
+        geolocationInput.value = JSON.stringify(result);
+        geolocationCollected = true;
+        geoStatusText.innerText = result.ip?.city || "Active";
+        geoStatusText.style.color = "var(--success)";
+        geoPill.innerText = `Verified: ${result.ip?.country || 'Global Node'}`;
+        geoPill.className = "status-pill status-normal";
+        geoPill.style.border = "none";
+      } catch (err) {
+        console.error('Geolocation failed:', err);
+        geoStatusText.innerText = "Restricted";
+        geoPill.innerText = "Local-only verification";
+      }
+    }
+
+    // Dot animation
+    let dotIdx = 0;
+    const dotInterval = setInterval(() => {
+      if (fingerprintCollected) {
+        clearInterval(dotInterval);
+        return;
+      }
+      dots.forEach(d => d.classList.remove('active'));
+      dots[dotIdx].classList.add('active');
+      dotIdx = (dotIdx + 1) % dots.length;
+    }, 300);
+
+    collectFingerprint();
+    collectGeolocation();
+
+    // Capture precise keystroke timings
+    typingField.addEventListener('keydown', (e) => {
+      if (!startTime) startTime = Date.now();
+      events.push({ key: e.key, t: Date.now() - startTime, type: 'keydown' });
+      updateRhythmUI();
+    });
+
+    typingField.addEventListener('keyup', (e) => {
+      if (startTime) {
+        events.push({ key: e.key, t: Date.now() - startTime, type: 'keyup' });
+        keystrokesInput.value = JSON.stringify(events);
+        updateRhythmUI();
+      }
+    });
+
+    function updateRhythmUI() {
+      charCounter.innerText = `${events.length} events captured`;
+      if (events.length > 0) {
+        rhythmStatus.innerText = "Analyzing pulse...";
+        rhythmStatus.style.color = "var(--primary)";
+      }
+    }
+
+    form.addEventListener('submit', (ev) => {
+      if (!events || events.length < 5) {
+        ev.preventDefault();
+        alert('The biometric sequence is too short.');
+        typingField.focus();
+        return;
+      }
+
+      if (!fingerprintCollected || !geolocationCollected) {
+        ev.preventDefault();
+        alert('Finalizing security context handshake...');
+        return;
+      }
+    });
+  })();
+</script>
+{% endblock %}
